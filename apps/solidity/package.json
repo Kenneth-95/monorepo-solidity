@@ -1,0 +1,23 @@
+{
+  "name": "solidity",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "dev": "hardhat node",
+    "console": "hardhat console",
+    "deploy:counter": "hardhat ignition deploy ./ignition/modules/Counter.js --network localhost",
+    "deploy:greeting": "hardhat ignition deploy ./ignition/modules/Greeting.js --network localhost",
+    "clean": "hardhat clean"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.0.0",
+    "concurrently": "^9.2.0",
+    "hardhat": "^2.25.0"
+  }
+}

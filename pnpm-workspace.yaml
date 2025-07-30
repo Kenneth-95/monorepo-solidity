@@ -1,0 +1,7 @@
+packages:
+  # 所有packages目录下的包
+  - 'packages/*'
+  # apps目录下的应用
+  - 'apps/*'
+  # tools目录下的工具包
+  - 'tools/*' 
