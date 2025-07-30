@@ -10,7 +10,8 @@
     "console": "hardhat console",
     "deploy:counter": "hardhat ignition deploy ./ignition/modules/Counter.js --network localhost",
     "deploy:greeting": "hardhat ignition deploy ./ignition/modules/Greeting.js --network localhost",
-    "clean": "hardhat clean"
+    "clean": "hardhat clean",
+    "update:config": "node scripts/deploy-and-update.js"
   },
   "keywords": [],
   "author": "",

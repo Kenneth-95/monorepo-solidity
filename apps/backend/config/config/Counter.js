@@ -119,5 +119,5 @@ module.exports = {
     }
   ],
         // 注意：这里需要在部署合约后更新实际的合约地址
-        address: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853" // Counter合约地址 - 自动更新
+        address: "0x0165878A594ca255338adfa4d48449f69242Eb8F" // Counter合约地址 - 自动更新
       }

@@ -65,5 +65,5 @@ export default {
     }
   ],
   // 注意：这里需要在部署合约后更新实际的合约地址
-  address: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318" // Lock合约地址 - 自动更新
+  address: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" // Lock合约地址 - 自动更新
 }
