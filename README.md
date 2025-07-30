@@ -29,8 +29,12 @@ pnpm install
 # 启动所有应用的开发模式
 pnpm dev
 
+# 启动合约编译更新本地配置
+pnpm --filter solidity update:config
+
 # 或单独启动某个应用
-pnpm --filter @monorepo/web-app dev
+pnpm --filter xxx dev
+
 ```
 
 ### 构建
@@ -40,7 +44,7 @@ pnpm --filter @monorepo/web-app dev
 pnpm build
 
 # 或构建特定包
-pnpm --filter @monorepo/shared-utils build
+pnpm --filter xxx build
 ```
 
 ## 📦 包管理
