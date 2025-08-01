@@ -9,11 +9,12 @@ async function deployAndUpdateContracts() {
   const files = fs.readdirSync(ignitionPath, { withFileTypes: true });
   console.log(files);
   // 过滤出目录
-  const modulesList = files
-    .filter((file) => {
-      return file.isFile()
-    })
-    .map((dir) => dir.name.replace('.js', ''));
+  // const modulesList = files
+  //   .filter((file) => {
+  //     return file.isFile()
+  //   })
+  //   .map((dir) => dir.name.replace('.js', ''));
+  const modulesList = ['AllModule']
   console.log(modulesList);
   try {
     // 检查网络连接
@@ -30,7 +31,10 @@ async function deployAndUpdateContracts() {
         const result = await execCommand(
           `npx hardhat ignition deploy ./ignition/modules/${module}.js --network localhost --reset`
         );
+        console.log(result,'xxxxx')
         const address = extractAddress(result, module);
+        console.log(address,'xxx2x')
+        return 
         console.log("\n🔄 正在更新前端配置...");
         updateFrontendConfig(address, module);
         console.log(`📍 ${module} 地址: ${address}`);
