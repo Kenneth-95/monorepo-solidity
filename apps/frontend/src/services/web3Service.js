@@ -9,6 +9,9 @@ class Web3Service {
     this.counterContract = null
     this.greetingContract = null
     this.todoListContract = null 
+    // 添加交易锁机制
+    this.pendingTransactions = new Map()
+    this.pendingReads = new Map()
   }
 
   // 连接钱包
@@ -79,10 +82,23 @@ class Web3Service {
   async getTodoList() {
     try {
       if (!this.todoListContract) throw new Error('合约未初始化')
-      const todoList = await this.todoListContract.getTodos()
-      return {
-        success: true,
-        todoList: todoList
+      
+      // 防止重复读取
+      const readKey = 'getTodoList'
+      if (this.pendingReads.has(readKey)) {
+        console.log('正在获取待办事项列表，请等待...')
+        return await this.pendingReads.get(readKey)
+      }
+
+      // 创建读取Promise
+      const readPromise = this._executeTodoListRead()
+      this.pendingReads.set(readKey, readPromise)
+      
+      try {
+        const result = await readPromise
+        return result
+      } finally {
+        this.pendingReads.delete(readKey)
       }
     } catch (error) {
       console.error('获取待办事项失败:', error)
@@ -93,15 +109,70 @@ class Web3Service {
     }
   }
 
+  // 内部执行读取逻辑
+  async _executeTodoListRead() {
+    // 检查是否需要完成默认待办事项
+    if (await this.todoListContract.shouldCompleteDefaultTodo()) {
+      const txKey = 'checkAndCompleteDefaultTodo'
+      
+      // 如果已有相同交易正在进行，等待它完成
+      if (this.pendingTransactions.has(txKey)) {
+        console.log('正在等待完成默认待办事项交易...')
+        await this.pendingTransactions.get(txKey)
+      } else {
+        // 发起新的交易
+        const txPromise = this._executeDefaultTodoCompletion()
+        this.pendingTransactions.set(txKey, txPromise)
+        
+        try {
+          await txPromise
+        } catch (error) {
+          console.error('完成默认待办事项失败:', error)
+        } finally {
+          this.pendingTransactions.delete(txKey)
+        }
+      }
+    }
+    
+    const todoList = await this.todoListContract.getTodos()
+    return {
+      success: true,
+      todoList: todoList
+    }
+  }
+
+  // 执行默认待办事项完成交易
+  async _executeDefaultTodoCompletion() {
+    const tx = await this.todoListContract.checkAndCompleteDefaultTodo()
+    await tx.wait()
+    console.log('默认待办事项已完成')
+    return tx
+  }
+
   // 添加待办事项
   async addTodo(task) {
     try {
       if (!this.todoListContract) throw new Error('合约未初始化')
-      const tx = await this.todoListContract.addTodo(task)
-      await tx.wait()
-      return {
-        success: true,
-        txHash: tx.hash
+      
+      const txKey = `addTodo_${task}`
+      
+      // 检查是否已有相同的添加操作正在进行
+      if (this.pendingTransactions.has(txKey)) {
+        console.log('相同的添加操作正在进行中，请等待...')
+        return {
+          success: false,
+          error: '相同的添加操作正在进行中，请等待完成'
+        }
+      }
+
+      const txPromise = this._executeAddTodo(task)
+      this.pendingTransactions.set(txKey, txPromise)
+      
+      try {
+        const result = await txPromise
+        return result
+      } finally {
+        this.pendingTransactions.delete(txKey)
       }
     } catch (error) {
       console.error('添加待办事项失败:', error)
@@ -112,15 +183,40 @@ class Web3Service {
     }
   }
 
+  // 内部执行添加待办事项
+  async _executeAddTodo(task) {
+    const tx = await this.todoListContract.addTodo(task)
+    await tx.wait()
+    return {
+      success: true,
+      txHash: tx.hash
+    }
+  }
+
   // 完成待办事项
   async completeTodo(index) {
     try {
       if (!this.todoListContract) throw new Error('合约未初始化')
-      const tx = await this.todoListContract.completeTodo(index)
-      await tx.wait()
-      return {
-        success: true,
-        txHash: tx.hash
+      
+      const txKey = `completeTodo_${index}`
+      
+      // 检查是否已有相同的完成操作正在进行
+      if (this.pendingTransactions.has(txKey)) {
+        console.log('相同的完成操作正在进行中，请等待...')
+        return {
+          success: false,
+          error: '相同的完成操作正在进行中，请等待完成'
+        }
+      }
+
+      const txPromise = this._executeCompleteTodo(index)
+      this.pendingTransactions.set(txKey, txPromise)
+      
+      try {
+        const result = await txPromise
+        return result
+      } finally {
+        this.pendingTransactions.delete(txKey)
       }
     } catch (error) {
       console.error('完成待办事项失败:', error)
@@ -128,6 +224,16 @@ class Web3Service {
         success: false,
         error: error.message
       }
+    }
+  }
+
+  // 内部执行完成待办事项
+  async _executeCompleteTodo(index) {
+    const tx = await this.todoListContract.completeTodo(index)
+    await tx.wait()
+    return {
+      success: true,
+      txHash: tx.hash
     }
   }
 
@@ -144,6 +250,7 @@ class Web3Service {
     try {
       if (!this.counterContract) throw new Error('合约未初始化')
       const count = await this.counterContract.getCount()
+    console.log(count,'conunee')
       return {
         success: true,
         count: Number(count)
@@ -373,6 +480,41 @@ class Web3Service {
     if (this.greetingContract) {
       this.greetingContract.removeAllListeners()
     }
+  }
+
+  // ======= 交易状态管理方法 =======
+  
+  // 检查特定交易是否正在进行
+  isTransactionPending(txKey) {
+    return this.pendingTransactions.has(txKey)
+  }
+
+  // 检查是否有任何交易正在进行
+  hasAnyPendingTransaction() {
+    return this.pendingTransactions.size > 0
+  }
+
+  // 检查读取操作是否正在进行
+  isReadPending(readKey) {
+    return this.pendingReads.has(readKey)
+  }
+
+  // 获取所有正在进行的交易键名
+  getPendingTransactionKeys() {
+    return Array.from(this.pendingTransactions.keys())
+  }
+
+  // 等待特定交易完成
+  async waitForTransaction(txKey) {
+    if (this.pendingTransactions.has(txKey)) {
+      await this.pendingTransactions.get(txKey)
+    }
+  }
+
+  // 清除所有待处理状态（用于错误恢复）
+  clearAllPendingStates() {
+    this.pendingTransactions.clear()
+    this.pendingReads.clear()
   }
 }
 

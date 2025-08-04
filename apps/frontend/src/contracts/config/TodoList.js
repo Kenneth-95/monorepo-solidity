@@ -185,6 +185,19 @@ export default {
       type: "function"
     },
     {
+      inputs: [],
+      name: "shouldCompleteDefaultTodo",
+      outputs: [
+        {
+          internalType: "bool",
+          name: "",
+          type: "bool"
+        }
+      ],
+      stateMutability: "view",
+      type: "function"
+    },
+    {
       inputs: [
         {
           internalType: "uint256",
@@ -215,5 +228,5 @@ export default {
     }
   ],
   // 注意：这里需要在部署合约后更新实际的合约地址
-  address: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788" // TodoList合约地址 - 自动更新
+  address: "0x9E545E3C0baAB3E08CdfD552C960A1050f373042" // TodoList合约地址 - 自动更新
 }

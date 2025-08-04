@@ -22,12 +22,6 @@ const router = createRouter({
       name: 'greeting',
       component: () => import('../views/GreetingContract.vue'),
     },
-    // 保留原有的demo路由作为备用
-    {
-      path: '/demo',
-      name: 'contractDemo',
-      component: () => import('../views/ContractDemo.vue'),
-    },
   ],
 })
 

@@ -3,6 +3,24 @@
     <!-- 钱包连接组件 -->
     <WalletConnect @wallet-connected="onWalletConnected" @wallet-disconnected="onWalletDisconnected" />
     
+    <!-- 交易状态提示 -->
+    <el-card v-if="isConnected && pendingTransactions.length > 0" class="transaction-status-card">
+      <template #header>
+        <div class="card-header">
+          <el-icon class="rotating"><Loading /></el-icon>
+          <span>正在处理交易</span>
+        </div>
+      </template>
+      <el-space direction="vertical" size="small" style="width: 100%">
+        <div v-for="tx in pendingTransactions" :key="tx" class="transaction-item">
+          <el-tag type="warning" size="small">
+            <el-icon><Loading /></el-icon>
+            {{ getTransactionDescription(tx) }}
+          </el-tag>
+        </div>
+      </el-space>
+    </el-card>
+    
     <!-- 合约信息卡片 -->
     <el-card class="contract-info-card">
       <template #header>
@@ -193,7 +211,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { 
   Document, 
@@ -202,7 +220,8 @@ import {
   DataAnalysis, 
   Refresh, 
   Check, 
-  CircleCheck 
+  CircleCheck,
+  Loading 
 } from '@element-plus/icons-vue'
 import WalletConnect from '../components/WalletConnect.vue'
 import web3Service from '../services/web3Service.js'
@@ -218,7 +237,8 @@ export default {
     DataAnalysis,
     Refresh,
     Check,
-    CircleCheck
+    CircleCheck,
+    Loading
   },
   setup() {
     const isConnected = ref(false)
@@ -239,10 +259,31 @@ export default {
       return (completedCount.value / todoList.value.length) * 100
     })
 
+    // 监控正在进行的交易
+    const pendingTransactions = ref([])
+    
+    // 定期更新交易状态
+    const updateTransactionStatus = () => {
+      pendingTransactions.value = web3Service.getPendingTransactionKeys()
+    }
+    
+    // 获取交易描述
+    const getTransactionDescription = (txKey) => {
+      if (txKey.startsWith('addTodo_')) {
+        return '正在添加待办事项...'
+      } else if (txKey.startsWith('completeTodo_')) {
+        return '正在更新待办事项状态...'
+      } else if (txKey === 'checkAndCompleteDefaultTodo') {
+        return '正在完成默认待办事项...'
+      }
+      return '正在处理交易...'
+    }
+
     // 钱包连接事件
     const onWalletConnected = async (account) => {
       isConnected.value = true
-      await getTodoList()
+      // 如果还没有初始化，才调用 getTodoList
+        await getTodoList()
     }
 
     const onWalletDisconnected = () => {
@@ -252,11 +293,17 @@ export default {
 
     // 获取待办事项列表
     const getTodoList = async () => {
+      // 检查是否已有读取操作正在进行
+      if (web3Service.isReadPending('getTodoList')) {
+        ElMessage.warning('正在获取待办事项列表，请稍等...')
+        return
+      }
+
       loading.value = 'getTodoList'
       
       try {
         const result = await web3Service.getTodoList()
-        console.log(result,'sss')
+        console.log(result,'获取待办事项结果')
         if (result.success) {
           todoList.value = result.todoList.map(item => ({
             id: item.id,
@@ -279,10 +326,18 @@ export default {
     const addTodo = async () => {
       if (!newTodo.value.trim()) return
       
+      const task = newTodo.value.trim()
+      
+      // 检查是否已有相同的添加操作正在进行
+      if (web3Service.isTransactionPending(`addTodo_${task}`)) {
+        ElMessage.warning('相同的添加操作正在进行中，请等待完成')
+        return
+      }
+      
       loading.value = 'addTodo'
       
       try {
-        const result = await web3Service.addTodo(newTodo.value.trim())
+        const result = await web3Service.addTodo(task)
         if (result.success) {
           newTodo.value = ''
           ElMessage.success('待办事项添加成功！')
@@ -301,6 +356,14 @@ export default {
 
     // 切换待办事项状态
     const toggleTodo = async (index) => {
+      // 检查是否已有相同的完成操作正在进行
+      if (web3Service.isTransactionPending(`completeTodo_${index}`)) {
+        ElMessage.warning('该待办事项正在处理中，请等待完成')
+        // 恢复原状态
+        todoList.value[index].isCompleted = !todoList.value[index].isCompleted
+        return
+      }
+
       loading.value = `toggle-${index}`
       
       try {
@@ -334,11 +397,24 @@ export default {
       }
     }
 
+    // 交易状态更新定时器
+    let statusUpdateTimer = null
+
     // 组件挂载时初始化
     onMounted(async () => {
       if (web3Service.isConnected()) {
         isConnected.value = true
-        await getTodoList()
+          await getTodoList()
+      }
+      
+      // 开始监控交易状态
+      statusUpdateTimer = setInterval(updateTransactionStatus, 1000)
+    })
+
+    // 组件卸载时清理
+    onUnmounted(() => {
+      if (statusUpdateTimer) {
+        clearInterval(statusUpdateTimer)
       }
     })
 
@@ -351,12 +427,14 @@ export default {
       todoList,
       completedCount,
       completionRate,
+      pendingTransactions,
       onWalletConnected,
       onWalletDisconnected,
       getTodoList,
       addTodo,
       toggleTodo,
-      focusNewTodoInput
+      focusNewTodoInput,
+      getTransactionDescription
     }
   }
 }
@@ -372,7 +450,8 @@ export default {
 .add-todo-card,
 .todolist-card,
 .stats-card,
-.no-wallet-card {
+.no-wallet-card,
+.transaction-status-card {
   margin-bottom: 20px;
 }
 
@@ -425,5 +504,29 @@ export default {
 .completed {
   background-color: #f0f9ff;
   border-color: #67c23a;
+}
+
+.transaction-status-card {
+  border-color: #e6a23c;
+  background-color: #fdf6ec;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rotating {
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style> 
