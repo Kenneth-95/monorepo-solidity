@@ -32,12 +32,22 @@ async function deployAndUpdateContracts() {
           `npx hardhat ignition deploy ./ignition/modules/${module}.js --network localhost --reset`
         );
         console.log(result,'xxxxx')
-        const address = extractAddress(result, module);
-        console.log(address,'xxx2x')
-        return 
-        console.log("\n🔄 正在更新前端配置...");
-        updateFrontendConfig(address, module);
-        console.log(`📍 ${module} 地址: ${address}`);
+        const addressInfo = extractAddress(result, module);
+        console.log(addressInfo,'xxx2x')
+        
+        // 处理AllModule的多合约情况
+        if (module === 'AllModule' && typeof addressInfo === 'object') {
+          console.log("\n🔄 正在更新前端配置...");
+          for (const [contractName, address] of Object.entries(addressInfo)) {
+            updateFrontendConfig(address, contractName);
+            console.log(`📍 ${contractName} 地址: ${address}`);
+          }
+        } else {
+          // 处理单合约情况
+          console.log("\n🔄 正在更新前端配置...");
+          updateFrontendConfig(addressInfo, module);
+          console.log(`📍 ${module} 地址: ${addressInfo}`);
+        }
       } catch (error) {
         console.error(`❌ 部署 ${module} 失败:`, error);
       }
@@ -105,13 +115,30 @@ async function checkNetworkStatus() {
   });
 }
 
-function extractAddress(deployOutput, contractName) {
-  // 从部署输出中提取合约地址，支持多种格式
+function extractAddress(deployOutput, moduleName) {
+  // 如果是AllModule，解析出所有合约信息
+  if (moduleName === 'AllModule') {
+    const contractMap = {};
+    
+    // 匹配 AllModule#ContractName - 0x... 的格式
+    const pattern = /AllModule#(\w+)\s*-\s*(0x[a-fA-F0-9]{40})/g;
+    let match;
+    
+    while ((match = pattern.exec(deployOutput)) !== null) {
+      const contractName = match[1]; // #后面的实际合约名称
+      const address = match[2];
+      contractMap[contractName] = address;
+    }
+    
+    return contractMap;
+  }
+  
+  // 原有的单合约处理逻辑
   const patterns = [
     new RegExp(
-      `${contractName}Module#${contractName}\\s*-\\s*(0x[a-fA-F0-9]{40})`
+      `${moduleName}Module#${moduleName}\\s*-\\s*(0x[a-fA-F0-9]{40})`
     ),
-    new RegExp(`${contractName}\\s*-\\s*(0x[a-fA-F0-9]{40})`),
+    new RegExp(`${moduleName}\\s*-\\s*(0x[a-fA-F0-9]{40})`),
     new RegExp(`Contract address:\\s*(0x[a-fA-F0-9]{40})`),
     new RegExp(`(0x[a-fA-F0-9]{40})`, "g"),
   ];
