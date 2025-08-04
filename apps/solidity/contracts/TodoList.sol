@@ -74,15 +74,21 @@ contract TodoList {
     }
 
     // 检查Counter计数并自动完成默认todo
-    function checkAndCompleteDefaultTodo() public {
+    // 检查是否需要完成默认todo（view函数，不消耗gas）
+    function shouldCompleteDefaultTodo() public view returns (bool) {
         uint256 currentCount = counterContract.getCount();
-        
-        // 如果计数增加了且默认todo还未完成
-        if (currentCount > lastCheckedCount && !todos[defaultTodoIndex].isCompleted) {
-            todos[defaultTodoIndex].isCompleted = true;
-            emit TodoCompleted(todos[defaultTodoIndex].id, todos[defaultTodoIndex].content);
+        return currentCount > lastCheckedCount && !todos[defaultTodoIndex].isCompleted;
+    }
+    
+    function checkAndCompleteDefaultTodo() public {
+        // 复用shouldCompleteDefaultTodo进行条件检查
+        if (!shouldCompleteDefaultTodo()) {
+            return;
         }
         
+        uint256 currentCount = counterContract.getCount();
+        todos[defaultTodoIndex].isCompleted = true;
+        emit TodoCompleted(todos[defaultTodoIndex].id, todos[defaultTodoIndex].content);
         lastCheckedCount = currentCount;
         emit CounterUpdated(currentCount);
     }
