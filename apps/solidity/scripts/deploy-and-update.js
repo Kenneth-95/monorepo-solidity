@@ -1,35 +1,39 @@
 const { exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
-const ignitionPath = path.join(__dirname, "../ignition/modules");
+require('dotenv').config();
+console.log('🔍 环境变量检查:');
+console.log('- INFURA_API_KEY:', process.env.INFURA_API_KEY ? '✅ 已配置' : '❌ 未配置');
+console.log('- PRIVATE_KEY:', process.env.PRIVATE_KEY ? '✅ 已配置' : '❌ 未配置');
+console.log('');
+// 获取网络参数，默认为localhost
+const network = process.argv[2] || 'localhost';
 
 async function deployAndUpdateContracts() {
-  console.log("🚀 开始智能部署流程...\n");
-  // 同步读取目录内容
-  const files = fs.readdirSync(ignitionPath, { withFileTypes: true });
-  console.log(files);
-  // 过滤出目录
-  // const modulesList = files
-  //   .filter((file) => {
-  //     return file.isFile()
-  //   })
-  //   .map((dir) => dir.name.replace('.js', ''));
+  console.log(`🚀 开始智能部署流程到 ${network} 网络...\n`);
+  
   const modulesList = ['AllModule']
-  console.log(modulesList);
+  
   try {
-    // 检查网络连接
-    console.log("🔍 检查Hardhat网络状态...");
-    await checkNetworkStatus();
-    console.log("✅ 网络连接正常！\n");
+    // 只有本地网络需要检查网络状态
+    if (network === 'localhost' || network === 'persistent') {
+      console.log("🔍 检查Hardhat本地网络状态...");
+      await checkNetworkStatus();
+      console.log("✅ 本地网络连接正常！\n");
+    } else {
+      console.log(`🌐 准备部署到 ${network} 网络...\n`);
+    }
+    
     if (!modulesList.length) {
       console.log("❌ 没有找到模块！");
       return;
     }
+    
     for (const module of modulesList) {
       try {
-        console.log(`📄 正在部署 ${module} 合约...`);
+        console.log(`📄 正在部署 ${module} 合约到 ${network}...`);
         const result = await execCommand(
-          `npx hardhat ignition deploy ./ignition/modules/${module}.js --network localhost --reset`
+          `npx hardhat ignition deploy ./ignition/modules/${module}.js --network ${network} --reset`
         );
         console.log(result,'xxxxx')
         const addressInfo = extractAddress(result, module);

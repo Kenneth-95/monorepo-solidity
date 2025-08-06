@@ -11,7 +11,8 @@
     "deploy:counter": "hardhat ignition deploy ./ignition/modules/Counter.js --network localhost",
     "deploy:greeting": "hardhat ignition deploy ./ignition/modules/Greeting.js --network localhost",
     "clean": "hardhat clean",
-    "update:config": "node scripts/deploy-and-update.js"
+    "update:config": "node scripts/deploy-and-update.js",
+    "deploy:sepolia": "node scripts/deploy-and-update.js sepolia"
   },
   "keywords": [],
   "author": "",
@@ -20,5 +21,8 @@
     "@nomicfoundation/hardhat-toolbox": "^6.0.0",
     "concurrently": "^9.2.0",
     "hardhat": "^2.25.0"
+  },
+  "dependencies": {
+    "dotenv": "17.2.1"
   }
 }

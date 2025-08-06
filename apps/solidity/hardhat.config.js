@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require('dotenv').config(); // 添加这行！
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -19,10 +20,9 @@ module.exports = {
       ]
     },
     sepolia: {
-      url: "https://sepolia.infura.io/v3/YOUR_INFURA_KEY", // 需要替换为真实的 Infura Key
+      url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`, // 需要替换为真实的 Infura Key
       accounts: [
-        // 在这里添加你的真实私钥（仅用于测试网络）
-        // "0x你的私钥"
+        `0x${process.env.PRIVATE_KEY}`
       ],
       chainId: 11155111
     }
