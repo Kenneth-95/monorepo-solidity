@@ -1,5 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
-require('dotenv').config(); // 添加这行！
+require('dotenv').config();
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {

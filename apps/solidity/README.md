@@ -11,3 +11,7 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat ignition deploy ./ignition/modules/Lock.js
 ```
+
+#测试环境
+根目录建立.env文件
+存入INFURA_API_KEY，PRIVATE_KEY变量
