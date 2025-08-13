@@ -12,7 +12,8 @@
     "deploy:greeting": "hardhat ignition deploy ./ignition/modules/Greeting.js --network localhost",
     "clean": "hardhat clean",
     "update:config": "node scripts/deploy-and-update.js",
-    "deploy:sepolia": "node scripts/deploy-and-update.js sepolia"
+    "update:persistent": "node scripts/deploy-and-update.js persistent",
+    "deploy:sepolia": "node scripts/deploy-and-update.js sepolia",
   },
   "keywords": [],
   "author": "",

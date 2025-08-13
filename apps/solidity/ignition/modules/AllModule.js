@@ -8,7 +8,8 @@ module.exports = buildModule("AllModule", (m) => {
   const greeting = m.contract("Greeting", ["Hello, World!"]);
   
   // 部署 TodoList，使用 Counter 地址
-  const todoList = m.contract("TodoList", [counter]);
+  const defaultRewardAmount = "10000000000000000"; // 0.01 ETH in wei
+  const todoList = m.contract("TodoList", [counter,defaultRewardAmount]);
   
   return { 
     counter, 
