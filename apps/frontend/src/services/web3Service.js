@@ -516,6 +516,139 @@ class Web3Service {
     this.pendingTransactions.clear()
     this.pendingReads.clear()
   }
+
+  // ======= 事件日志查询方法 =======
+  
+  // 通用事件日志查询方法
+  async queryEventLogs(contract, eventName, fromBlock = 0, toBlock = 'latest', filters = {}) {
+    try {
+      if (!this.provider) {
+        throw new Error('Provider未初始化，请先连接钱包')
+      }
+
+      if (!contract) {
+        throw new Error('合约实例不能为空')
+      }
+
+      // 构建事件过滤器
+      const eventFilter = contract.filters[eventName]
+      if (!eventFilter) {
+        throw new Error(`事件 ${eventName} 在合约中不存在`)
+      }
+
+      // 应用过滤条件
+      const filter = eventFilter(...Object.values(filters))
+
+      // 查询事件日志
+      const logs = await contract.queryFilter(filter, fromBlock, toBlock)
+
+      // 格式化日志数据
+      const formattedLogs = logs.map(log => ({
+        blockNumber: log.blockNumber,
+        blockHash: log.blockHash,
+        transactionHash: log.transactionHash,
+        transactionIndex: log.transactionIndex,
+        logIndex: log.logIndex,
+        address: log.address,
+        event: log.event,
+        eventSignature: log.eventSignature,
+        args: log.args ? Object.assign({}, log.args) : null,
+        data: log.data,
+        topics: log.topics
+      }))
+
+      return {
+        success: true,
+        logs: formattedLogs,
+        totalCount: formattedLogs.length
+      }
+
+    } catch (error) {
+      console.error('查询事件日志失败:', error)
+      return {
+        success: false,
+        error: error.message,
+        logs: []
+      }
+    }
+  }
+
+  // 查询TodoList合约事件日志
+  async queryTodoListLogs(eventName, fromBlock = 0, toBlock = 'latest', filters = {}) {
+    if (!this.todoListContract) {
+      throw new Error('TodoList合约未初始化')
+    }
+    return await this.queryEventLogs(this.todoListContract, eventName, fromBlock, toBlock, filters)
+  }
+
+  // 查询Counter合约事件日志
+  async queryCounterLogs(eventName, fromBlock = 0, toBlock = 'latest', filters = {}) {
+    if (!this.counterContract) {
+      throw new Error('Counter合约未初始化')
+    }
+    return await this.queryEventLogs(this.counterContract, eventName, fromBlock, toBlock, filters)
+  }
+
+  // 查询Greeting合约事件日志
+  async queryGreetingLogs(eventName, fromBlock = 0, toBlock = 'latest', filters = {}) {
+    if (!this.greetingContract) {
+      throw new Error('Greeting合约未初始化')
+    }
+    return await this.queryEventLogs(this.greetingContract, eventName, fromBlock, toBlock, filters)
+  }
+
+  // 便捷方法：查询TodoList的RewardPaid事件
+  async queryRewardPaidLogs(fromBlock = 0, toBlock = 'latest', recipient = null) {
+    const filters = recipient ? { recipient } : {}
+    return await this.queryTodoListLogs('RewardPaid', fromBlock, toBlock, filters)
+  }
+
+  async getBalance(address){
+    try {
+      const balance = await this.provider.getBalance(address)
+      const ethBalance = ethers.utils.formatEther(balance)
+      return {
+        success: true,
+        balance: ethBalance
+      }
+    } catch (error) {
+      console.error('获取余额失败:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  // 根据交易哈希查询事件日志
+  async queryLogsByTransactionHash(txHash) {
+    try {
+      if (!this.provider) {
+        throw new Error('Provider未初始化')
+      }
+
+      const txReceipt = await this.provider.getTransactionReceipt(txHash)
+      if (!txReceipt) {
+        throw new Error('交易回执不存在')
+      }
+
+      return {
+        success: true,
+        logs: txReceipt.logs,
+        transactionHash: txHash,
+        blockNumber: txReceipt.blockNumber,
+        gasUsed: txReceipt.gasUsed.toString()
+      }
+
+    } catch (error) {
+      console.error('根据交易哈希查询日志失败:', error)
+      return {
+        success: false,
+        error: error.message,
+        logs: []
+      }
+    }
+  }
 }
 
 // 导出单例实例

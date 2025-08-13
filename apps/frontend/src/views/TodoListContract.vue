@@ -206,6 +206,16 @@
       </el-alert>
     </el-card>
 
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <el-icon><DataAnalysis /></el-icon>
+          <span>事件日志</span>
+        </div>
+      </template>
+      <el-button type="primary" @click="getTodoListLogs">获取事件日志</el-button>
+    </el-card>
+
 
   </div>
 </template>
@@ -400,6 +410,11 @@ export default {
     // 交易状态更新定时器
     let statusUpdateTimer = null
 
+    const getTodoListLogs =async ()=>{
+      const result = await web3Service.queryTodoListLogs('RewardPaid')
+      console.log(result,'获取事件日志结果')
+    }
+
     // 组件挂载时初始化
     onMounted(async () => {
       if (web3Service.isConnected()) {
@@ -434,7 +449,8 @@ export default {
       addTodo,
       toggleTodo,
       focusNewTodoInput,
-      getTransactionDescription
+      getTransactionDescription,
+      getTodoListLogs
     }
   }
 }
