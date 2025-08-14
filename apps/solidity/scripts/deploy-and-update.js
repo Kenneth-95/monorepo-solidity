@@ -229,9 +229,10 @@ function generateConfigContent(module, abi, address,isFrontend=true) {
 function updateFrontendConfig(address, module) {
   const configPath = path.join(__dirname, `../../frontend/src/contracts/config/${module}.js`);
   const backConfigPath = path.join(__dirname, `../../backend/config/config/${module}.js`);
+  const reactConfigPath = path.join(__dirname, `../../react-front/src/contracts/config/${module}.ts`);
   const configDir = path.dirname(configPath);
   const backConfigDir = path.dirname(backConfigPath);
-  
+  const reactConfigDir = path.dirname(reactConfigPath);
   // 确保配置目录存在
   if (!fs.existsSync(configDir)) {
     fs.mkdirSync(configDir, { recursive: true });
@@ -241,7 +242,10 @@ function updateFrontendConfig(address, module) {
     fs.mkdirSync(backConfigDir, { recursive: true });
     console.log(`📁 创建后端配置目录: ${backConfigDir}`);
   }
-
+  if (!fs.existsSync(reactConfigDir)) {
+    fs.mkdirSync(reactConfigDir, { recursive: true });
+    console.log(`📁 创建react前端配置目录: ${reactConfigDir}`);
+  }
   // 从 artifacts 中获取 ABI
   const abi = extractAbiFromArtifacts(module);
   if (!abi) {
@@ -255,6 +259,8 @@ function updateFrontendConfig(address, module) {
   fs.writeFileSync(configPath, configContent);
   const backconfigContent = generateConfigContent(module, abi, address,false);
   fs.writeFileSync(backConfigPath, backconfigContent);
+  const reactConfigContent = generateConfigContent(module, abi, address);
+  fs.writeFileSync(reactConfigPath,reactConfigContent)
   console.log(`✅ 已生成 ${module} 配置文件: ${configPath}`);
 }
 

@@ -13,7 +13,7 @@
     "clean": "hardhat clean",
     "update:config": "node scripts/deploy-and-update.js",
     "update:persistent": "node scripts/deploy-and-update.js persistent",
-    "deploy:sepolia": "node scripts/deploy-and-update.js sepolia",
+    "deploy:sepolia": "node scripts/deploy-and-update.js sepolia"
   },
   "keywords": [],
   "author": "",
