@@ -66,12 +66,42 @@ async function deployAndUpdateContracts() {
 
 function execCommand(command) {
   return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
+    console.log(`🔄 执行命令: ${command}`);
+    
+    const { spawn } = require("child_process");
+    const args = command.split(' ');
+    const cmd = args.shift();
+    
+    const process = spawn(cmd, args, {
+      stdio: ['inherit', 'pipe', 'pipe'],
+      shell: true
+    });
+    
+    let stdout = '';
+    let stderr = '';
+    
+    process.stdout.on('data', (data) => {
+      const output = data.toString();
+      console.log(output); // 实时显示输出
+      stdout += output;
+    });
+    
+    process.stderr.on('data', (data) => {
+      const error = data.toString();
+      console.error(error); // 实时显示错误
+      stderr += error;
+    });
+    
+    process.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`命令执行失败，退出码: ${code}\n${stderr}`));
         return;
       }
       resolve(stdout);
+    });
+    
+    process.on('error', (error) => {
+      reject(error);
     });
   });
 }

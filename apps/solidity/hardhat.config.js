@@ -24,7 +24,9 @@ module.exports = {
       accounts: [
         `0x${process.env.PRIVATE_KEY}`
       ],
-      chainId: 11155111
+      chainId: 11155111,
+      timeout: 60000, // 60秒超时
+      gasPrice: 20000000000, // 20 gwei
     }
   },
   // 持久化存储配置
