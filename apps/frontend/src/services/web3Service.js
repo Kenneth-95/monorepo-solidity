@@ -31,12 +31,17 @@ class Web3Service {
       this.signer = this.provider.getSigner()
       this.account = accounts[0]
 
+      // 获取当前网络信息
+      const network = await this.provider.getNetwork()
+      console.log('当前网络:', network)
+
       // 初始化合约实例
       this.initContracts()
 
       return {
         success: true,
-        account: this.account
+        account: this.account,
+        network: network
       }
     } catch (error) {
       console.error('连接钱包失败:', error)
@@ -44,6 +49,117 @@ class Web3Service {
         success: false,
         error: error.message
       }
+    }
+  }
+
+  // 切换网络
+  async switchNetwork(networkKey) {
+    try {
+      if (!window.ethereum) {
+        throw new Error('请安装MetaMask钱包')
+      }
+
+      const network = NETWORKS[networkKey]
+      if (!network) {
+        throw new Error(`不支持的网络: ${networkKey}`)
+      }
+
+      const chainIdHex = '0x' + network.chainId.toString(16)
+
+      try {
+        // 尝试切换到指定网络
+        await window.ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: chainIdHex }]
+        })
+      } catch (switchError) {
+        // 如果网络不存在，添加网络
+        if (switchError.code === 4902) {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: chainIdHex,
+              chainName: network.name,
+              nativeCurrency: {
+                name: network.currency,
+                symbol: network.currency,
+                decimals: 18
+              },
+              rpcUrls: [network.rpcUrl],
+              blockExplorerUrls: [network.explorerUrl]
+            }]
+          })
+        } else {
+          throw switchError
+        }
+      }
+
+      // 重新初始化provider和合约
+      this.provider = new ethers.providers.Web3Provider(window.ethereum)
+      this.signer = this.provider.getSigner()
+      this.initContracts()
+
+      return {
+        success: true,
+        network: network
+      }
+    } catch (error) {
+      console.error('切换网络失败:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  // 获取当前网络信息
+  async getCurrentNetwork() {
+    try {
+      if (!this.provider) {
+        throw new Error('Provider未初始化')
+      }
+
+      const network = await this.provider.getNetwork()
+      const networkKey = Object.keys(NETWORKS).find(
+        key => NETWORKS[key].chainId === network.chainId
+      )
+
+      return {
+        success: true,
+        network: network,
+        networkKey: networkKey,
+        networkConfig: networkKey ? NETWORKS[networkKey] : null
+      }
+    } catch (error) {
+      console.error('获取网络信息失败:', error)
+      return {
+        success: false,
+        error: error.message
+      }
+    }
+  }
+
+  // 监听网络变化
+  setupNetworkChangeListener(callback) {
+    if (window.ethereum) {
+      window.ethereum.on('chainChanged', (chainId) => {
+        const networkKey = Object.keys(NETWORKS).find(
+          key => NETWORKS[key].chainId === parseInt(chainId, 16)
+        )
+        
+        // 重新初始化provider和合约
+        this.provider = new ethers.providers.Web3Provider(window.ethereum)
+        this.signer = this.provider.getSigner()
+        this.initContracts()
+
+        if (callback) {
+          callback({
+            chainId: parseInt(chainId, 16),
+            networkKey: networkKey,
+            networkConfig: networkKey ? NETWORKS[networkKey] : null
+          })
+        }
+      })
     }
   }
 
