@@ -473,5 +473,5 @@ export default {
     }
   ],
   // 注意：这里需要在部署合约后更新实际的合约地址
-  address: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6" // TodoList合约地址 - 自动更新
+  address: "0x86Ad576DC1082210BA40C4b5C99A7CbF1eBf1522" // TodoList合约地址 - 自动更新
 }

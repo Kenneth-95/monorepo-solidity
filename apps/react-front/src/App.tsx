@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
-import { Layout, Typography, Space, Divider, Card } from 'antd'
-import { GithubOutlined, TwitterOutlined, GlobalOutlined } from '@ant-design/icons'
+import { Layout, Typography, Space, Divider, Card, Menu } from 'antd'
+import { GithubOutlined, TwitterOutlined, GlobalOutlined, UnorderedListOutlined, BarChartOutlined } from '@ant-design/icons'
 import WalletConnect from './components/WalletConnect'
 import TodoListComponent from './components/TodoList'
+import CounterComponent from './components/counter'
 
 const { Header, Content, Footer } = Layout
 const { Title, Text, Link } = Typography
 
 function App() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
+  const [currentView, setCurrentView] = useState<'todo' | 'counter'>('todo')
 
   const handleWalletConnected = (account: string) => {
     setIsWalletConnected(true)
@@ -19,6 +21,19 @@ function App() {
     setIsWalletConnected(false)
     console.log('钱包已断开连接')
   }
+
+  const menuItems = [
+    {
+      key: 'todo',
+      icon: <UnorderedListOutlined />,
+      label: '待办事项',
+    },
+    {
+      key: 'counter',
+      icon: <BarChartOutlined />,
+      label: '计数器',
+    },
+  ]
 
   return (
     <Layout style={{ minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
@@ -54,10 +69,23 @@ function App() {
               T
             </div>
             <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
-              React TodoList DApp
+              React DApp Demo
             </Title>
           </Space>
-
+          
+          {/* 导航菜单 */}
+          <Menu
+            mode="horizontal"
+            selectedKeys={[currentView]}
+            items={menuItems}
+            onClick={({ key }) => setCurrentView(key as 'todo' | 'counter')}
+            style={{ 
+              border: 'none', 
+              backgroundColor: 'transparent',
+              flex: 1,
+              marginLeft: 40
+            }}
+          />
         </div>
       </Header>
 
@@ -71,10 +99,10 @@ function App() {
           <Card style={{ marginBottom: 24, textAlign: 'center' }}>
             <Space direction="vertical" size="middle">
               <Title level={2} style={{ margin: 0 }}>
-                🚀 去中心化待办事项应用
+                🚀 去中心化应用演示
               </Title>
               <Text type="secondary" style={{ fontSize: 16 }}>
-                这是一个基于区块链的待办事项管理应用，使用 React + RainbowKit + Wagmi + Ant Design 构建
+                这是一个基于区块链的应用演示，包含待办事项管理和计数器功能，使用 React + RainbowKit + Wagmi + Ant Design 构建
               </Text>
               <Space split={<Divider type="vertical" />}>
                 <Text>✨ 钱包连接</Text>
@@ -91,8 +119,12 @@ function App() {
             onWalletDisconnected={handleWalletDisconnected}
           />
 
-          {/* TodoList组件 */}
-          <TodoListComponent />
+          {/* 动态组件渲染 */}
+          {currentView === 'todo' ? (
+            <TodoListComponent />
+          ) : (
+            <CounterComponent />
+          )}
         </div>
       </Content>
 

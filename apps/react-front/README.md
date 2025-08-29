@@ -119,6 +119,58 @@ export const config = getDefaultConfig({
 - 检查网络请求和区块链交易状态
 - 使用 Wagmi DevTools 进行调试
 
+# 环境变量配置说明
+
+## 1. 复制环境变量文件
+
+```bash
+cp env.example .env
+```
+
+## 2. 配置必要的环境变量
+
+编辑 `.env` 文件，配置以下变量：
+
+### WalletConnect Project ID
+1. 访问 [WalletConnect Cloud](https://cloud.walletconnect.com/)
+2. 注册/登录账户
+3. 创建新项目
+4. 复制 Project ID
+5. 在 `.env` 文件中设置：
+```
+VITE_WALLET_CONNECT_PROJECT_ID=你的_project_id
+```
+
+### RPC 提供商 API Key (选择其中一个)
+
+#### Infura (推荐)
+1. 访问 [Infura](https://infura.io/)
+2. 注册账户并创建项目
+3. 复制 API Key
+4. 在 `.env` 文件中设置：
+```
+VITE_INFURA_API_KEY=你的_infura_api_key
+```
+
+## 3. 启动应用
+
+```bash
+npm run dev
+```
+
+## 4. 验证配置
+
+启动后检查浏览器控制台，如果没有警告信息说明配置正确。
+
+## 注意事项
+
+- `.env` 文件包含敏感信息，不要提交到版本控制
+- 确保 `.env` 文件在项目根目录
+- 环境变量必须以 `VITE_` 开头才能在客户端使用
+- 如果使用 Infura，建议同时配置 Alchemy 作为备用
+
+
+
 ## 许可证
 
 MIT License

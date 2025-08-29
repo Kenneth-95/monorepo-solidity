@@ -130,5 +130,5 @@ export default {
     }
   ],
   // 注意：这里需要在部署合约后更新实际的合约地址
-  address: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853" // Greeting合约地址 - 自动更新
+  address: "0xf60652b13926a4e92913163Dc9B32E3B62E1D027" // Greeting合约地址 - 自动更新
 }

@@ -119,5 +119,5 @@ export default {
     }
   ],
   // 注意：这里需要在部署合约后更新实际的合约地址
-  address: "0x0165878A594ca255338adfa4d48449f69242Eb8F" // Counter合约地址 - 自动更新
+  address: "0x4b28E60cAB0924032Fe190FA9fB56F1808371848" // Counter合约地址 - 自动更新
 }

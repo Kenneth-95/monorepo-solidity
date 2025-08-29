@@ -14,7 +14,7 @@ export const useTodoList = () => {
     isLoading: isLoadingTodos, 
     refetch: refetchTodos 
   } = useReadContract({
-    address: CONTRACTS.TodoList.address,
+    address: CONTRACTS.TodoList.address as `0x${string}`,
     abi: CONTRACTS.TodoList.abi,
     functionName: 'getTodos',
   })

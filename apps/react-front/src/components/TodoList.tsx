@@ -219,7 +219,6 @@ const TodoListComponent: React.FC = () => {
                       checked={todo.isCompleted}
                       onChange={() => handleToggleTodo(todo.id, todo.isCompleted)}
                       disabled={todo.isCompleted || isLoading}
-                      size="large"
                     />
                   ) : (
                     <div style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
